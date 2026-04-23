@@ -8,10 +8,10 @@ class WorkoutSelectionScreen extends StatelessWidget {
   void openWorkout(BuildContext context, String type) async {
     const userId = "testUser";
 
-    // 🔥 Save workout to Firebase
+    // Save workout to Firebase
     await DatabaseService().saveUserWorkout(userId, type);
 
-    // 🔥 Go to workout session screen
+    // Navigate to session screen
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -35,7 +35,7 @@ class WorkoutSelectionScreen extends StatelessWidget {
 
                 WorkoutCard(
                   title: "Push Day",
-                  color: Colors.redAccent,
+                  color: const Color(0xFF1C1C1E),
                   onTap: () => openWorkout(context, "Push"),
                 ),
 
@@ -43,7 +43,7 @@ class WorkoutSelectionScreen extends StatelessWidget {
 
                 WorkoutCard(
                   title: "Pull Day",
-                  color: Colors.blueAccent,
+                  color: const Color(0xFF1C1C1E),
                   onTap: () => openWorkout(context, "Pull"),
                 ),
 
@@ -51,7 +51,7 @@ class WorkoutSelectionScreen extends StatelessWidget {
 
                 WorkoutCard(
                   title: "Leg Day",
-                  color: Colors.green,
+                  color: const Color(0xFF1C1C1E),
                   onTap: () => openWorkout(context, "Legs"),
                 ),
 
