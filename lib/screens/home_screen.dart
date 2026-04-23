@@ -1,50 +1,67 @@
 import 'package:flutter/material.dart';
-import 'workout_selection_screen.dart';
-import 'workout_history_screen.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+import 'dashboard_screen.dart';
+import 'workout_selection_screen.dart';
+import 'profile_screen.dart';
+
+class HomeScreen extends StatefulWidget {
+  final Function(bool) onThemeChanged;
+
+  const HomeScreen({
+    super.key,
+    required this.onThemeChanged,
+  });
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int selectedIndex = 0;
+
+  late List<Widget> screens;
+
+  @override
+  void initState() {
+    super.initState();
+
+    screens = [
+      const DashboardScreen(),
+      const WorkoutSelectionScreen(),
+      ProfileScreen(
+        onThemeChanged: widget.onThemeChanged,
+      ),
+    ];
+  }
+
+  void changeTab(int index) {
+    setState(() {
+      selectedIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Home")),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+      body: screens[selectedIndex],
 
-            // Start Workout Button
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const WorkoutSelectionScreen(),
-                  ),
-                );
-              },
-              child: const Text("Start Workout"),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Workout History Button
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const WorkoutHistoryScreen(),
-                  ),
-                );
-              },
-              child: const Text("My Workouts"),
-            ),
-
-          ],
-        ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: selectedIndex,
+        onTap: changeTab,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: "Dashboard",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.fitness_center),
+            label: "Workouts",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: "Profile",
+          ),
+        ],
       ),
     );
   }

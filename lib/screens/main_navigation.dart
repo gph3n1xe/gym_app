@@ -4,7 +4,12 @@ import 'workout_selection_screen.dart';
 import 'profile_screen.dart';
 
 class MainNavigation extends StatefulWidget {
-  const MainNavigation({super.key});
+  final Function(bool) onThemeChanged;
+
+  const MainNavigation({
+    super.key,
+    required this.onThemeChanged,
+  });
 
   @override
   State<MainNavigation> createState() => _MainNavigationState();
@@ -13,16 +18,26 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const DashboardScreen(),
-    const WorkoutSelectionScreen(),
-    const ProfileScreen(),
-  ];
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _screens = [
+      const DashboardScreen(),
+      const WorkoutSelectionScreen(),
+      ProfileScreen(
+        onThemeChanged: widget.onThemeChanged,
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: _screens[_currentIndex],
+
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
@@ -30,15 +45,18 @@ class _MainNavigationState extends State<MainNavigation> {
             _currentIndex = index;
           });
         },
+
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
             label: "Dashboard",
           ),
+
           BottomNavigationBarItem(
             icon: Icon(Icons.fitness_center),
             label: "Workouts",
           ),
+
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: "Profile",

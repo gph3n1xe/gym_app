@@ -9,9 +9,14 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final TextEditingController usernameController =
+  TextEditingController();
 
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController emailController =
+  TextEditingController();
+
+  final TextEditingController passwordController =
+  TextEditingController();
 
   final AuthService _authService = AuthService();
 
@@ -19,17 +24,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final user = await _authService.register(
       emailController.text,
       passwordController.text,
+      usernameController.text,
     );
 
     if (user != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Registration successful")),
-      );
-
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Registration failed")),
+        const SnackBar(
+          content: Text("Registration failed"),
+        ),
       );
     }
   }
@@ -37,23 +41,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Register")),
+      appBar: AppBar(
+        title: const Text("Register"),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
 
             TextField(
+              controller: usernameController,
+              decoration: const InputDecoration(
+                labelText: "Username",
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            TextField(
               controller: emailController,
-              decoration: const InputDecoration(labelText: "Email"),
+              decoration: const InputDecoration(
+                labelText: "Email",
+              ),
             ),
 
             const SizedBox(height: 20),
 
             TextField(
               controller: passwordController,
-              decoration: const InputDecoration(labelText: "Password"),
               obscureText: true,
+              decoration: const InputDecoration(
+                labelText: "Password",
+              ),
             ),
 
             const SizedBox(height: 30),
@@ -62,16 +81,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               onPressed: registerUser,
               child: const Text("Register"),
             ),
-
-            const SizedBox(height: 20),
-
-            TextButton(
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/login');
-              },
-              child: const Text("Already have an account? Login"),
-            ),
-
           ],
         ),
       ),
