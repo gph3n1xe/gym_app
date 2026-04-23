@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
-import 'screens/home_screen.dart';
 import 'screens/register_screen.dart';
+import 'screens/main_navigation.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   runApp(const SorrowFitnessApp());
 }
+
 class SorrowFitnessApp extends StatelessWidget {
   const SorrowFitnessApp({super.key});
 
@@ -26,15 +29,16 @@ class SorrowFitnessApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
-
       initialRoute: '/',
+
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
-        '/home': (context) => const HomeScreen(),
         '/register': (context) => const RegisterScreen(),
+
+        // 🔥 THIS IS THE KEY CHANGE
+        '/home': (context) => const MainNavigation(),
       },
     );
   }
 }
-

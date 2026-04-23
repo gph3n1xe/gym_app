@@ -7,9 +7,7 @@ class WorkoutSelectionScreen extends StatelessWidget {
 
   void openWorkout(BuildContext context, String type) async {
     const userId = "testUser";
-
     await DatabaseService().saveUserWorkout(userId, type);
-
     Navigator.push(
       context,
       MaterialPageRoute(
