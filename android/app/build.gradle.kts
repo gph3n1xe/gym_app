@@ -33,7 +33,15 @@ android {
         }
     }
 }
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
 
+    dependencies {
+    }
+}
 flutter {
     source = "../.."
 }
