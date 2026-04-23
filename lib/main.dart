@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+
+import 'screens/SplashScreen.dart';
+import 'screens/LoginScreen.dart';
+import 'screens/HomeScreen.dart';
  // main function used to start the flutter app
 void main() {
   runApp(const SorrowFitnessApp()); // connects the widget tree to the screen
