@@ -3,13 +3,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
-
+import 'screens/register_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   runApp(const SorrowFitnessApp());
 }
-
 class SorrowFitnessApp extends StatelessWidget {
   const SorrowFitnessApp({super.key});
 
@@ -33,6 +32,7 @@ class SorrowFitnessApp extends StatelessWidget {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(),
+        '/register': (context) => const RegisterScreen(),
       },
     );
   }

@@ -1,31 +1,35 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
   final AuthService _authService = AuthService();
 
-  void loginUser() async {
-    final user = await _authService.login(
+  void registerUser() async {
+    final user = await _authService.register(
       emailController.text,
       passwordController.text,
     );
 
     if (user != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Registration successful")),
+      );
+
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Login failed")),
+        const SnackBar(content: Text("Registration failed")),
       );
     }
   }
@@ -33,11 +37,10 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Login")),
+      appBar: AppBar(title: const Text("Register")),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
 
             TextField(
@@ -56,17 +59,17 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 30),
 
             ElevatedButton(
-              onPressed: loginUser,
-              child: const Text("Login"),
+              onPressed: registerUser,
+              child: const Text("Register"),
             ),
 
             const SizedBox(height: 20),
 
             TextButton(
               onPressed: () {
-                Navigator.pushReplacementNamed(context, '/register');
+                Navigator.pushReplacementNamed(context, '/login');
               },
-              child: const Text("Don't have an account? Register"),
+              child: const Text("Already have an account? Login"),
             ),
 
           ],
