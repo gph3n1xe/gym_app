@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "190176263297",
+    "project_id": "sorrow-71baa",
+    "storage_bucket": "sorrow-71baa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:190176263297:android:c76031cc9c319f38b5a180",
+        "android_client_info": {
+          "package_name": "com.example.gym_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCDfimOWxAHmH5UK0eRMUE3anCSVjGLqdY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

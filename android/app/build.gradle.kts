@@ -4,7 +4,9 @@ plugins {
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
-
+dependencies {
+    classpath 'com.google.gms:google-services:4.4.1'
+}
 android {
     namespace = "com.example.gym_app"
     compileSdk = flutter.compileSdkVersion
@@ -42,3 +44,4 @@ android {
 flutter {
     source = "../.."
 }
+apply plugin: 'com.google.gms.google-services'

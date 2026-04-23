@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
-
+import 'package:firebase_core/firebase_core.dart';
 import 'screens/SplashScreen.dart';
 import 'screens/LoginScreen.dart';
 import 'screens/HomeScreen.dart';
- // main function used to start the flutter app
-void main() {
-  runApp(const SorrowFitnessApp()); // connects the widget tree to the screen
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(const SorrowFitnessApp());
 }
 
 class SorrowFitnessApp extends StatelessWidget {
   const SorrowFitnessApp({super.key});
- // defining the app theme, naviagtion
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -25,7 +27,7 @@ class SorrowFitnessApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
-      // control screen switching
+
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
