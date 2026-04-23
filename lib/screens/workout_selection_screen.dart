@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'workout_detail_screen.dart';
+import 'workout_session_screen.dart';
 import '../services/database_service.dart';
 
 class WorkoutSelectionScreen extends StatelessWidget {
@@ -7,11 +7,15 @@ class WorkoutSelectionScreen extends StatelessWidget {
 
   void openWorkout(BuildContext context, String type) async {
     const userId = "testUser";
+
+    // 🔥 Save workout to Firebase
     await DatabaseService().saveUserWorkout(userId, type);
+
+    // 🔥 Go to workout session screen
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => WorkoutDetailScreen(type: type),
+        builder: (context) => WorkoutSessionScreen(type: type),
       ),
     );
   }
@@ -20,6 +24,7 @@ class WorkoutSelectionScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Choose Workout")),
+
       body: Center(
         child: SingleChildScrollView(
           child: Padding(

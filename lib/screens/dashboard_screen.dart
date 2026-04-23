@@ -10,10 +10,11 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  DateTime selectedDay = DateTime.now();
   DateTime focusedDay = DateTime.now();
+  DateTime selectedDay = DateTime.now();
 
-  Map<DateTime, List<String>> workoutMap = {};
+  Map<DateTime, List<String>> workoutDays = {};
+  int streak = 0;
 
   @override
   void initState() {
@@ -21,33 +22,78 @@ class _DashboardScreenState extends State<DashboardScreen> {
     loadWorkouts();
   }
 
+  // 🔥 LOAD WORKOUTS FROM FIRESTORE
   void loadWorkouts() async {
     final snapshot =
     await FirebaseFirestore.instance.collection('user_workouts').get();
 
-    Map<DateTime, List<String>> tempMap = {};
+    Map<DateTime, List<String>> temp = {};
+    Set<DateTime> workoutDates = {};
 
     for (var doc in snapshot.docs) {
       final data = doc.data();
       final timestamp = data['timestamp'].toDate();
-      final date = DateTime(timestamp.year, timestamp.month, timestamp.day);
+
+      // normalize date (VERY IMPORTANT)
+      final dayKey = DateTime.utc(
+        timestamp.year,
+        timestamp.month,
+        timestamp.day,
+      );
 
       final type = data['type'];
 
-      if (tempMap[date] == null) {
-        tempMap[date] = [];
+      workoutDates.add(dayKey);
+
+      if (temp[dayKey] == null) {
+        temp[dayKey] = [];
       }
 
-      tempMap[date]!.add(type);
+      temp[dayKey]!.add(type);
     }
 
     setState(() {
-      workoutMap = tempMap;
+      workoutDays = temp;
+      streak = calculateStreak(workoutDates.toList());
     });
   }
 
-  List<String> getWorkoutsForDay(DateTime day) {
-    return workoutMap[DateTime(day.year, day.month, day.day)] ?? [];
+  // 🔥 GET EVENTS FOR A DAY
+  List<String> getEvents(DateTime day) {
+    final key = DateTime.utc(day.year, day.month, day.day);
+    return workoutDays[key] ?? [];
+  }
+
+  // 🔥 CHECK IF DAY HAS WORKOUT
+  bool hasWorkout(DateTime day) {
+    final key = DateTime.utc(day.year, day.month, day.day);
+    return workoutDays.containsKey(key);
+  }
+
+  // 🔥 STREAK CALCULATOR
+  int calculateStreak(List<DateTime> dates) {
+    if (dates.isEmpty) return 0;
+
+    dates.sort((a, b) => b.compareTo(a));
+
+    int streakCount = 1;
+
+    for (int i = 0; i < dates.length - 1; i++) {
+      final current = dates[i];
+      final next = dates[i + 1];
+
+      final difference = current.difference(next).inDays;
+
+      if (difference == 1) {
+        streakCount++;
+      } else if (difference == 0) {
+        continue;
+      } else {
+        break;
+      }
+    }
+
+    return streakCount;
   }
 
   @override
@@ -58,6 +104,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: Column(
         children: [
 
+          // 🔥 STREAK DISPLAY
+          Container(
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.black54,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.local_fire_department, color: Colors.orange),
+                const SizedBox(width: 10),
+                Text(
+                  "Workout Streak: $streak days",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // 📅 CALENDAR
           TableCalendar(
             focusedDay: focusedDay,
             firstDay: DateTime(2020),
@@ -74,20 +145,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
               });
             },
 
-            eventLoader: (day) {
-              return getWorkoutsForDay(day);
-            },
+            calendarBuilders: CalendarBuilders(
+              defaultBuilder: (context, day, focusedDay) {
+                if (hasWorkout(day)) {
+                  return Container(
+                    margin: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      color: Colors.redAccent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${day.day}',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  );
+                }
+                return null;
+              },
+            ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
 
+          // 📊 WORKOUT LIST FOR SELECTED DAY
           Expanded(
             child: ListView(
-              children: getWorkoutsForDay(selectedDay)
-                  .map((workout) => ListTile(
-                leading: const Icon(Icons.fitness_center),
-                title: Text(workout),
-              ))
+              children: getEvents(selectedDay)
+                  .map(
+                    (e) => Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.fitness_center),
+                    title: Text(e),
+                    subtitle: Text(
+                      "${selectedDay.day}/${selectedDay.month}/${selectedDay.year}",
+                    ),
+                  ),
+                ),
+              )
                   .toList(),
             ),
           ),
