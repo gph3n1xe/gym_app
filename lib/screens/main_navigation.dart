@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dashboard_screen.dart';
-import 'workout_selection_screen.dart';
+import 'split_selection_screen.dart';
 import 'profile_screen.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -26,7 +26,7 @@ class _MainNavigationState extends State<MainNavigation> {
 
     _screens = [
       const DashboardScreen(),
-      const WorkoutSelectionScreen(),
+      const SplitSelectionScreen(),
       ProfileScreen(
         onThemeChanged: widget.onThemeChanged,
       ),
@@ -36,7 +36,10 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
+      ),
 
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -51,12 +54,10 @@ class _MainNavigationState extends State<MainNavigation> {
             icon: Icon(Icons.dashboard),
             label: "Dashboard",
           ),
-
           BottomNavigationBarItem(
             icon: Icon(Icons.fitness_center),
             label: "Workouts",
           ),
-
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: "Profile",

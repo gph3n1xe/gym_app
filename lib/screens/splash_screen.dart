@@ -14,11 +14,12 @@ class _SplashScreenState extends State<SplashScreen> {
     _navigateToLogin();
   }
 
-  void _navigateToLogin() async {
+  Future<void> _navigateToLogin() async {
     await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      Navigator.pushReplacementNamed(context, '/login');
-    }
+
+    if (!mounted) return;
+
+    Navigator.pushReplacementNamed(context, '/login');
   }
 
   @override
@@ -27,7 +28,10 @@ class _SplashScreenState extends State<SplashScreen> {
       body: Center(
         child: Text(
           'SORROW FITNESS',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );

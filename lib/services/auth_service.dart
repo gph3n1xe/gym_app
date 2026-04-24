@@ -3,13 +3,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _db =
-      FirebaseFirestore.instance;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+
+  User? getCurrentUser() {
+    return _auth.currentUser;
+  }
 
   Future<User?> register(
       String email,
       String password,
-      String username,
+      String firstName,
+      String lastName,
       ) async {
     try {
       UserCredential userCredential =
@@ -22,8 +26,11 @@ class AuthService {
           .collection("users")
           .doc(userCredential.user!.uid)
           .set({
-        "username": username,
+        "firstName": firstName,
+        "lastName": lastName,
         "email": email,
+        "theme": "dark",
+        "createdAt": Timestamp.now(),
       });
 
       return userCredential.user;
@@ -32,7 +39,6 @@ class AuthService {
       return null;
     }
   }
-
   Future<User?> login(
       String email,
       String password,
@@ -50,7 +56,6 @@ class AuthService {
       return null;
     }
   }
-
   Future<void> logout() async {
     await _auth.signOut();
   }

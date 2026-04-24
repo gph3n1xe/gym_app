@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:gym_app/services/auth_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -9,84 +10,168 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends State<DashboardScreen>
+    with WidgetsBindingObserver {
+
   DateTime focusedDay = DateTime.now();
   DateTime selectedDay = DateTime.now();
 
   Map<DateTime, List<String>> workoutDays = {};
   int streak = 0;
 
+  String? userId;
+  String firstName = "";
+
+  DateTime? accountStartDate;
+
+  int weeklyGoal = 5;
+  int weeklyDone = 0;
+
+  final List<String> quotes = [
+    "what a shame.. fix that",
+    "no pain no gain huh? get up and train",
+    "excuses don't build muscle",
+    "stop scrolling, start lifting",
+    "discipline > motivation"
+  ];
+
+  String dailyQuote = "";
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    loadUser();
+    loadQuote();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      loadWorkouts();
+    }
+  }
+
+  DateTime normalize(DateTime d) {
+    return DateTime.utc(d.year, d.month, d.day);
+  }
+
+  void loadUser() async {
+    final user = AuthService().getCurrentUser();
+    userId = user?.uid;
+
+    if (userId == null) return;
+
+    accountStartDate = normalize(user!.metadata.creationTime!);
+
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .get();
+
+    if (doc.exists) {
+      setState(() {
+        firstName = doc['firstName'] ?? "";
+      });
+    }
+
     loadWorkouts();
   }
 
-  // 🔥 LOAD WORKOUTS FROM FIRESTORE
-  void loadWorkouts() async {
-    final snapshot =
-    await FirebaseFirestore.instance.collection('user_workouts').get();
+  Future<void> loadWorkouts() async {
+    if (userId == null) return;
+
+    final snapshot = await FirebaseFirestore.instance
+        .collection('user_workouts')
+        .where('userId', isEqualTo: userId)
+        .get();
 
     Map<DateTime, List<String>> temp = {};
     Set<DateTime> workoutDates = {};
 
     for (var doc in snapshot.docs) {
       final data = doc.data();
-      final timestamp = data['timestamp'].toDate();
 
-      // normalize date (VERY IMPORTANT)
-      final dayKey = DateTime.utc(
-        timestamp.year,
-        timestamp.month,
-        timestamp.day,
-      );
+      final timestamp = (data['timestamp'] as Timestamp).toDate();
+      final dayKey = normalize(timestamp);
 
-      final type = data['type'];
+      final type = data['type'] ?? "Workout";
 
       workoutDates.add(dayKey);
 
-      if (temp[dayKey] == null) {
-        temp[dayKey] = [];
-      }
-
+      temp.putIfAbsent(dayKey, () => []);
       temp[dayKey]!.add(type);
     }
 
     setState(() {
       workoutDays = temp;
-      streak = calculateStreak(workoutDates.toList());
+
+      workoutDates = workoutDates;
+      streak = calculateStreak(
+        workoutDates.toList()..sort((a, b) => b.compareTo(a)),
+      );
+    });
+
+    calculateWeeklyWorkouts();
+  }
+
+  void calculateWeeklyWorkouts() {
+    final now = DateTime.now();
+
+    final startOfWeek = normalize(
+      now.subtract(Duration(days: now.weekday - 1)),
+    );
+
+    final endOfWeek = normalize(
+      startOfWeek.add(const Duration(days: 6)),
+    );
+
+    final uniqueDays = workoutDays.keys.where((day) {
+      return !day.isBefore(startOfWeek) && !day.isAfter(endOfWeek);
+    }).toSet();
+
+    setState(() {
+      weeklyDone = uniqueDays.length;
     });
   }
 
-  // 🔥 GET EVENTS FOR A DAY
-  List<String> getEvents(DateTime day) {
-    final key = DateTime.utc(day.year, day.month, day.day);
-    return workoutDays[key] ?? [];
+  void loadQuote() {
+    quotes.shuffle();
+    dailyQuote = quotes.first;
   }
 
-  // 🔥 CHECK IF DAY HAS WORKOUT
   bool hasWorkout(DateTime day) {
-    final key = DateTime.utc(day.year, day.month, day.day);
-    return workoutDays.containsKey(key);
+    final key = normalize(day);
+    return workoutDays[key]?.isNotEmpty ?? false;
   }
 
-  // 🔥 STREAK CALCULATOR
+  bool isMissedDay(DateTime day) {
+    final today = normalize(DateTime.now());
+    final key = normalize(day);
+
+    if (accountStartDate != null && key.isBefore(accountStartDate!)) {
+      return false;
+    }
+
+    return key.isBefore(today) && !hasWorkout(day);
+  }
+
   int calculateStreak(List<DateTime> dates) {
     if (dates.isEmpty) return 0;
-
-    dates.sort((a, b) => b.compareTo(a));
 
     int streakCount = 1;
 
     for (int i = 0; i < dates.length - 1; i++) {
-      final current = dates[i];
-      final next = dates[i + 1];
+      final diff = dates[i].difference(dates[i + 1]).inDays;
 
-      final difference = current.difference(next).inDays;
-
-      if (difference == 1) {
+      if (diff == 1) {
         streakCount++;
-      } else if (difference == 0) {
+      } else if (diff == 0) {
         continue;
       } else {
         break;
@@ -104,87 +189,74 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: Column(
         children: [
 
-          // 🔥 STREAK DISPLAY
           Container(
             padding: const EdgeInsets.all(16),
             margin: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.black54,
-              borderRadius: BorderRadius.circular(12),
+            child: Text(
+              "Streak: $streak DAYS 🔥\nKeep going $firstName",
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 18),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+          ),
+
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.local_fire_department, color: Colors.orange),
-                const SizedBox(width: 10),
-                Text(
-                  "Workout Streak: $streak days",
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Text("Weekly Goal: $weeklyDone / $weeklyGoal"),
+                const SizedBox(height: 10),
+                LinearProgressIndicator(
+                  value: weeklyGoal == 0 ? 0 : weeklyDone / weeklyGoal,
                 ),
               ],
             ),
           ),
 
-          // 📅 CALENDAR
-          TableCalendar(
-            focusedDay: focusedDay,
-            firstDay: DateTime(2020),
-            lastDay: DateTime(2030),
+          const SizedBox(height: 10),
 
-            selectedDayPredicate: (day) {
-              return isSameDay(selectedDay, day);
-            },
-
-            onDaySelected: (selected, focused) {
-              setState(() {
-                selectedDay = selected;
-                focusedDay = focused;
-              });
-            },
-
-            calendarBuilders: CalendarBuilders(
-              defaultBuilder: (context, day, focusedDay) {
-                if (hasWorkout(day)) {
-                  return Container(
-                    margin: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(
-                      color: Colors.redAccent,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${day.day}',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  );
-                }
-                return null;
-              },
+          Container(
+            margin: const EdgeInsets.all(12),
+            child: Text(
+              dailyQuote,
+              textAlign: TextAlign.center,
             ),
           ),
 
-          const SizedBox(height: 10),
-
-          // 📊 WORKOUT LIST FOR SELECTED DAY
           Expanded(
-            child: ListView(
-              children: getEvents(selectedDay)
-                  .map(
-                    (e) => Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.fitness_center),
-                    title: Text(e),
-                    subtitle: Text(
-                      "${selectedDay.day}/${selectedDay.month}/${selectedDay.year}",
-                    ),
-                  ),
-                ),
-              )
-                  .toList(),
+            child: TableCalendar(
+              focusedDay: focusedDay,
+              firstDay: DateTime(2020),
+              lastDay: DateTime(2030),
+
+              selectedDayPredicate: (day) =>
+                  isSameDay(selectedDay, day),
+
+              onDaySelected: (selected, focused) {
+                setState(() {
+                  selectedDay = selected;
+                  focusedDay = focused;
+                });
+              },
+
+              calendarBuilders: CalendarBuilders(
+                defaultBuilder: (context, day, focusedDay) {
+                  if (hasWorkout(day)) {
+                    return const Center(
+                      child: Icon(Icons.check, color: Colors.lightGreenAccent),
+                    );
+                  }
+
+                  if (isMissedDay(day)) {
+                    return const Center(
+                      child: Icon(Icons.close, color: Colors.redAccent),
+                    );
+                  }
+
+                  return null;
+                },
+              ),
             ),
           ),
         ],

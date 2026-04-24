@@ -9,7 +9,6 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
@@ -34,11 +33,33 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Login")),
+
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+
+            // 🔥 WELCOME MESSAGE
+            const Text(
+              "Welcome Back !",
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            const Text(
+              "Let’s continue your fitness journey",
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+
+            const SizedBox(height: 30),
 
             TextField(
               controller: emailController,
@@ -68,7 +89,6 @@ class _LoginScreenState extends State<LoginScreen> {
               },
               child: const Text("Don't have an account? Register"),
             ),
-
           ],
         ),
       ),

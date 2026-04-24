@@ -19,33 +19,63 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool isDarkMode = true;
   int selectedStars = 0;
-  String username = "Loading...";
+
+  String fullName = "Loading...";
 
   final AuthService _authService = AuthService();
 
   @override
   void initState() {
     super.initState();
-    loadUsername();
+    loadUserName();
   }
 
-  Future<void> loadUsername() async {
+  Future<void> loadUserName() async {
     final user = FirebaseAuth.instance.currentUser;
 
-    if (user != null) {
+    if (user == null) {
+      if (!mounted) return;
+      setState(() {
+        fullName = "Guest User";
+      });
+      return;
+    }
+
+    try {
       final doc = await FirebaseFirestore.instance
           .collection("users")
           .doc(user.uid)
           .get();
 
+      if (!mounted) return;
+
+      if (doc.exists && doc.data() != null) {
+        final data = doc.data()!;
+
+        final firstName = data["firstName"] ?? "";
+        final lastName = data["lastName"] ?? "";
+
+        setState(() {
+          fullName = "$firstName $lastName".trim();
+        });
+      } else {
+        setState(() {
+          fullName = "User";
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+
       setState(() {
-        username = doc["username"];
+        fullName = "Error loading user";
       });
     }
   }
 
-  void logoutUser() async {
+  Future<void> logoutUser() async {
     await _authService.logout();
+
+    if (!mounted) return;
 
     Navigator.pushReplacementNamed(context, '/login');
   }
@@ -61,9 +91,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             });
           },
           icon: Icon(
-            index < selectedStars
-                ? Icons.star
-                : Icons.star_border,
+            index < selectedStars ? Icons.star : Icons.star_border,
             color: Colors.amber,
           ),
         );
@@ -74,13 +102,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Profile"),
-      ),
+      appBar: AppBar(title: const Text("Profile")),
+
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
+
             const SizedBox(height: 20),
 
             const CircleAvatar(
@@ -91,7 +119,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 20),
 
             Text(
-              username,
+              fullName,
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -132,7 +160,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 backgroundColor: Colors.red,
               ),
               child: const Text("Logout"),
-            )
+            ),
           ],
         ),
       ),

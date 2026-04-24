@@ -9,20 +9,15 @@ class DatabaseService {
       'timestamp': Timestamp.now(),
     });
   }
-  // CREATE WORKOUT
   Future<void> addWorkout(String name) async {
     await _db.collection('workouts').add({
       'name': name,
       'createdAt': Timestamp.now(),
     });
   }
-
-  // READ WORKOUTS (REAL-TIME STREAM)
   Stream<QuerySnapshot> getWorkouts() {
     return _db.collection('workouts').snapshots();
   }
-
-  // DELETE WORKOUT (optional but useful later)
   Future<void> deleteWorkout(String id) async {
     await _db.collection('workouts').doc(id).delete();
   }

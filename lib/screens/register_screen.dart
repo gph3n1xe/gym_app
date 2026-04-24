@@ -9,79 +9,114 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final TextEditingController usernameController =
-  TextEditingController();
-
-  final TextEditingController emailController =
-  TextEditingController();
-
-  final TextEditingController passwordController =
-  TextEditingController();
+  final firstNameController = TextEditingController();
+  final lastNameController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
   final AuthService _authService = AuthService();
 
-  void registerUser() async {
+  bool isLoading = false;
+
+  Future<void> registerUser() async {
+    if (emailController.text.isEmpty ||
+        passwordController.text.isEmpty ||
+        firstNameController.text.isEmpty ||
+        lastNameController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill all fields")),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+
     final user = await _authService.register(
-      emailController.text,
-      passwordController.text,
-      usernameController.text,
+      emailController.text.trim(),
+      passwordController.text.trim(),
+      firstNameController.text.trim(),
+      lastNameController.text.trim(),
     );
+
+    if (!mounted) return;
+
+    setState(() => isLoading = false);
 
     if (user != null) {
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Registration failed"),
-        ),
+        const SnackBar(content: Text("Registration failed")),
       );
     }
   }
 
   @override
+  void dispose() {
+    firstNameController.dispose();
+    lastNameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Register"),
-      ),
+      appBar: AppBar(title: const Text("Register")),
+
       body: Padding(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
 
-            TextField(
-              controller: usernameController,
-              decoration: const InputDecoration(
-                labelText: "Username",
+              TextField(
+                controller: firstNameController,
+                decoration: const InputDecoration(labelText: "First Name"),
               ),
-            ),
 
-            const SizedBox(height: 20),
+              const SizedBox(height: 10),
 
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(
-                labelText: "Email",
+              TextField(
+                controller: lastNameController,
+                decoration: const InputDecoration(labelText: "Last Name"),
               ),
-            ),
 
-            const SizedBox(height: 20),
+              const SizedBox(height: 10),
 
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "Password",
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(labelText: "Email"),
               ),
-            ),
 
-            const SizedBox(height: 30),
+              const SizedBox(height: 10),
 
-            ElevatedButton(
-              onPressed: registerUser,
-              child: const Text("Register"),
-            ),
-          ],
+              TextField(
+                controller: passwordController,
+                decoration: const InputDecoration(labelText: "Password"),
+                obscureText: true,
+              ),
+
+              const SizedBox(height: 20),
+
+              isLoading
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                onPressed: registerUser,
+                child: const Text("Register"),
+              ),
+
+              const SizedBox(height: 10),
+
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text("Already have an account? Login"),
+              ),
+            ],
+          ),
         ),
       ),
     );
